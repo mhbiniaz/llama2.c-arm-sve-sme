@@ -52,6 +52,15 @@ runompgnu:
 	$(CC) -Ofast -fopenmp -std=gnu11 run.c  -lm  -o run
 	$(CC) -Ofast -fopenmp -std=gnu11 runq.c  -lm  -o runq
 
+.PHONY: runarm
+runarm:
+	aarch64-linux-gnu-gcc -Ofast -static -o run.arm run.c -lm
+	aarch64-linux-gnu-gcc -Ofast -static -o runq.arm runq.c -lm
+
+.PHONY: qemu-arm-count
+qemu-arm-count: runarm
+	qemu-aarch64 -d in_asm,exec,cpu ./run.arm $(ARGS)
+
 # run all tests
 .PHONY: test
 test:
@@ -74,3 +83,4 @@ testcc:
 clean:
 	rm -f run
 	rm -f runq
+	rm -f run runq run.arm runq.arm
