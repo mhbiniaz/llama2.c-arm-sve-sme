@@ -1,5 +1,8 @@
-# For instruction count, run as such: 
-`make qemu-arm-count ARGS="stories15M.bin -n 5" 2>&1 | grep "^IN:" | wc -l`
+# For instruction count, run as such for counting instructions for generating ten tokens: 
+`make qemu-arm-count ARGS="stories15M.bin -n 10" > qemu.log 2>&1 && grep -E "^\s*0x[0-9a-fA-F]+:" qemu.log | wc -l
+
+make qemu-arm-count ARGS="stories15M.bin -n 50" > qemu.log 2>&1 && grep -E "^\s*0x[0-9a-fA-F]+:" qemu.log | wc -l
+
 
 ## or with input as:
 `make qemu-arm-count ARGS="stories15M.bin -t 0.8 -n 256 -i "One day, Lily met a Shoggoth" 2>&1 | grep "^IN:" | wc -l`

@@ -59,7 +59,7 @@ runarm:
 
 .PHONY: qemu-arm-count
 qemu-arm-count: runarm
-	qemu-aarch64 -d in_asm,exec,cpu ./run.arm $(ARGS)
+	qemu-aarch64 -d in_asm ./run.arm $(ARGS)
 
 # run all tests
 .PHONY: test
@@ -84,3 +84,4 @@ clean:
 	rm -f run
 	rm -f runq
 	rm -f run runq run.arm runq.arm
+	rm qemu.log
