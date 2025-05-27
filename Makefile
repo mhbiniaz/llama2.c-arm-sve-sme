@@ -54,8 +54,9 @@ runompgnu:
 
 .PHONY: runarm
 runarm:
-	aarch64-linux-gnu-gcc -Ofast -static -o run.arm run.c -lm
-	aarch64-linux-gnu-gcc -Ofast -static -o runq.arm runq.c -lm
+	aarch64-linux-gnu-gcc -g -O0 -static -o run.arm run.c -lm
+	aarch64-linux-gnu-gcc -g -O0 -static -o runq.arm runq.c -lm
+
 
 .PHONY: qemu-arm-count
 qemu-arm-count: runarm
