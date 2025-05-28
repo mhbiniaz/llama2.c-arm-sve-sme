@@ -1,0 +1,42 @@
+# arch64-linux-gnu-objdump -d --disassemble=matmul sve.run.arm > sve.matmul.dissassemble
+
+sve.run.arm:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+0000000000401220 <matmul>:
+  401220:	7100009f 	cmp	w4, #0x0
+  401224:	5400030d 	b.le	401284 <matmul+0x64>
+  401228:	52800008 	mov	w8, #0x0                   	// #0
+  40122c:	d2800009 	mov	x9, #0x0                   	// #0
+  401230:	0f000401 	movi	v1.2s, #0x0
+  401234:	52800005 	mov	w5, #0x0                   	// #0
+  401238:	7100007f 	cmp	w3, #0x0
+  40123c:	540001ad 	b.le	401270 <matmul+0x50>
+  401240:	0b050106 	add	w6, w8, w5
+  401244:	25a304a0 	whilelt	p0.s, w5, w3
+  401248:	8b25c827 	add	x7, x1, w5, sxtw #2
+  40124c:	110040a5 	add	w5, w5, #0x10
+  401250:	8b26c846 	add	x6, x2, w6, sxtw #2
+  401254:	a540a0e2 	ld1w	{z2.s}, p0/z, [x7]
+  401258:	a540a0c0 	ld1w	{z0.s}, p0/z, [x6]
+  40125c:	65828040 	fmul	z0.s, p0/m, z0.s, z2.s
+  401260:	65802000 	faddv	s0, p0, z0.s
+  401264:	1e202821 	fadd	s1, s1, s0
+  401268:	6b05007f 	cmp	w3, w5
+  40126c:	54fffeac 	b.gt	401240 <matmul+0x20>
+  401270:	bc297801 	str	s1, [x0, x9, lsl #2]
+  401274:	91000529 	add	x9, x9, #0x1
+  401278:	0b030108 	add	w8, w8, w3
+  40127c:	6b09009f 	cmp	w4, w9
+  401280:	54fffd8c 	b.gt	401230 <matmul+0x10>
+  401284:	d65f03c0 	ret
+
+Disassembly of section __libc_freeres_fn:
+
+Disassembly of section .fini:
