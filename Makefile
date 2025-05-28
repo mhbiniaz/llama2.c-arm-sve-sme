@@ -62,6 +62,15 @@ runarm:
 qemu-arm-count: runarm
 	qemu-aarch64 -d in_asm ./run.arm $(ARGS)
 
+
+.PHONY: runarm-sve
+runarm-sve:
+	aarch64-linux-gnu-gcc -g -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -o sve.run.arm run-sve.c -lm
+
+.PHONY: sve-qemu-arm-count
+sve-qemu-arm-count: runarm-sve
+	qemu-aarch64 -cpu max,sve=on -d in_asm ./sve.run.arm $(ARGS)
+
 # run all tests
 .PHONY: test
 test:
@@ -82,7 +91,5 @@ testcc:
 
 .PHONY: clean
 clean:
-	rm -f run
-	rm -f runq
-	rm -f run runq run.arm runq.arm
-	rm qemu.log
+	rm -f run runq run.arm runq.arm sve.run.arm sve.runq.arm
+	rm -f qemu.log
