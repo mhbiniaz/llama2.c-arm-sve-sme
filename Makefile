@@ -52,6 +52,9 @@ runompgnu:
 	$(CC) -Ofast -fopenmp -std=gnu11 run.c  -lm  -o run
 	$(CC) -Ofast -fopenmp -std=gnu11 runq.c  -lm  -o runq
 
+
+## ===================== Run ARM/X86 Cross compiled ===================================
+
 .PHONY: runarm
 runarm:
 	aarch64-linux-gnu-gcc -g -O0 -static -o run.arm run.c -lm
@@ -70,6 +73,29 @@ runarm-sve:
 .PHONY: sve-qemu-arm-count
 sve-qemu-arm-count: runarm-sve
 	qemu-aarch64 -cpu max,sve=on -d in_asm ./sve.run.arm $(ARGS)
+
+## ===================== Native ARM build and run on Kunpeng 920 =======================
+## -mcpu=generic
+
+.PHONY: native-arm
+native-arm:
+	gcc -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -mcpu=generic -ftree-vectorize -o run.native run.c -lm
+	gcc -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -mcpu=generic -ftree-vectorize -o runq.native runq.c -lm
+
+.PHONY: run-native
+run-native: native-arm
+	./run.native $(ARGS)
+
+.PHONY: runq-native
+runq-native: native-arm
+	./runq.native $(ARGS)
+
+.PHONY: native-arm-qemu
+native-arm-qemu: runarm-sve
+	qemu-aarch64 -cpu max,sve=on -d in_asm ./run.native $(ARGS)
+
+## ======================================================================================
+
 
 # run all tests
 .PHONY: test
@@ -91,5 +117,5 @@ testcc:
 
 .PHONY: clean
 clean:
-	rm -f run runq run.arm runq.arm sve.run.arm sve.runq.arm
+	rm -f run runq run.arm runq.arm sve.run.arm sve.runq.arm run.native runq.native
 	rm -f qemu.log
