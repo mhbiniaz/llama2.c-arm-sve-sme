@@ -41,4 +41,5 @@ and furthermore, Ofast inlines the functions -> cant find matmul at all :)
 for i: 
  make sve-qemu-arm-count ARGS="stories15M.bin -n 50" > qemu.log 2>&1 && grep -E "^\s*0x[0-9a-fA-F]+:" qemu.log | wc -l && ./sve.get_matmul_assembly.sh > sve.O{i} && make clean
 
-
+----------------------------------------------------------------------------------------
+make native-arm-qemu ARGS="stories15M.bin -n 5" > qemu.log 2>&1 && grep -E "^\s*0x[0-9a-fA-F]+:" qemu.log | wc -l
