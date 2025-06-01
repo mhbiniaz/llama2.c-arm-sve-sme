@@ -1,0 +1,64 @@
+uname -m
+output=x86
+
+# download the image first, run uname -m to see if we are now on arm or not? output should change to aarch64 (before it was x86) 
+docker run --platform=linux/arm64/v8 --rm -t arm64v8/ubuntu uname -m
+output=aarch64
+
+# now do the same and build the image with qemu inside with plugins
+docker build --platform=linux/arm64/v8 -t native_arm .
+
+# tag and push container
+docker tag native_arm:latest docker.gitlab-ce.gwdg.de/hpc-team/student-assistants/sme-oehi:version_native
+docker login docker.gitlab-ce.gwdg.de
+docker push docker.gitlab-ce.gwdg.de/hpc-team/student-assistants/sme-oehi:version_native
+
+dockerfile: 
+FROM arm64v8/ubuntu:24.04
+
+# Update and install dependencies
+RUN apt-get update && apt-get install -y \
+    git build-essential ninja-build pkg-config python3 python3-pip \
+    libpcre3-dev libglib2.0-dev \
+    ca-certificates wget tar curl \
+    gcc g++ \
+    python3-tomli \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt
+
+# Get QEMU source
+RUN git clone https://gitlab.com/qemu-project/qemu.git
+
+# Build QEMU for aarch64, with plugins, debug, SVE/SME enabled
+WORKDIR /opt/qemu
+RUN ./configure --target-list=aarch64-linux-user --enable-plugins --enable-debug \
+    && make -j$(nproc)
+
+# Optionally, download and use official Arm GNU Toolchain for aarch64 (arm64 native):
+WORKDIR /opt
+#RUN wget https://example.com/arm-gnu-toolchain-13.2.Rel1-aarch64-aarch64-none-linux-gnu.tar.xz \
+#  && tar xf arm-gnu-toolchain-13.2.Rel1-aarch64-aarch64-none-linux-gnu.tar.xz
+
+#RUN wget https://example.com/arm-gnu-toolchain-13.2.Rel1-aarch64-aarch64-none-linux-gnu.tar.xz \
+#  && tar xf arm-gnu-toolchain-13.2.Rel1-aarch64-aarch64-none-linux-gnu.tar.xz
+
+# https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+RUN wget https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-aarch64-none-linux-gnu.tar.xz \
+   && tar xf arm-gnu-toolchain-14.2.rel1-aarch64-aarch64-none-linux-gnu.tar.xz
+
+
+#RUN wget https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.Rel1-aarch64-aarch64-none-linux-gnu.tar.xz \
+ #   && tar xf arm-gnu-toolchain-13.2.Rel1-aarch64-aarch64-none-linux-gnu.tar.xz
+
+ENV PATH="/opt/arm-gnu-toolchain-13.2.Rel1-aarch64-aarch64-none-linux-gnu/bin:${PATH}"
+ENV PATH="/opt/qemu/build:${PATH}"
+
+# Show QEMU and GCC versions/locations (for verification)
+RUN /opt/qemu/build/qemu-aarch64 --version && \
+    gcc --version
+
+# Show available plugins for QEMU
+RUN ls /opt/qemu/tests/tcg/plugins/
+
+ENTRYPOINT ["/bin/bash"]
