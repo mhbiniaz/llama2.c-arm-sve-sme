@@ -79,19 +79,14 @@ sve-qemu-arm-count: runarm-sve
 
 .PHONY: native-arm
 native-arm:
-	gcc -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -mcpu=generic -ftree-vectorize -o run.native run.c -lm
-	gcc -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -mcpu=generic -ftree-vectorize -o runq.native runq.c -lm
+	gcc-14 -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -ftree-vectorize -o run.native run-sve.c -lm
 
 .PHONY: run-native
 run-native: native-arm
 	./run.native $(ARGS)
 
-.PHONY: runq-native
-runq-native: native-arm
-	./runq.native $(ARGS)
-
 .PHONY: native-arm-qemu
-native-arm-qemu: runarm-sve
+native-arm-qemu: native-arm
 	qemu-aarch64 -cpu max,sve=on -d in_asm ./run.native $(ARGS)
 
 ## ======================================================================================
