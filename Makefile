@@ -80,6 +80,7 @@ sve-qemu-arm-count: runarm-sve
 .PHONY: native-arm
 native-arm:
 	gcc-14 -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -ftree-vectorize -o run.native run-sve.c -lm
+	objdump -d run.native | grep "matmul"
 
 .PHONY: run-native
 run-native: native-arm
@@ -88,6 +89,39 @@ run-native: native-arm
 .PHONY: native-arm-qemu
 native-arm-qemu: native-arm
 	qemu-aarch64 -cpu max,sve=on -d in_asm ./run.native $(ARGS)
+# make qemu-1 ARGS="stories15M.bin -n 5"
+
+.PHONY: qemu-1
+qemu-1: native-arm
+	qemu-aarch64 -cpu max,sve=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so ./run.native $(ARGS)
+
+.PHONY: qemu-2
+qemu-2: native-arm
+	qemu-aarch64 -cpu max,sve512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so -d plugin ./run.native $(ARGS) 
+# 2>&1 | grep "total insns:"
+
+
+
+# Apptainer> make qemu-2 ARGS="stories15M.bin -n 5"
+# gcc-14 -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -ftree-vectorize -o run.native run-sve.c -lm
+# qemu-aarch64 -cpu max,sve512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so -d plugin ./run.native stories15M.bin -n 5 
+# Once upon a time,
+# achieved tok/s: 0.287274
+# cpu 0 insns: 120063299
+# total insns: 120063299
+# Apptainer> make qemu-2 ARGS="stories15M.bin -n 10"
+# gcc-14 -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -ftree-vectorize -o run.native run-sve.c -lm
+# qemu-aarch64 -cpu max,sve512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so -d plugin ./run.native stories15M.bin -n 10 
+# Once upon a time, there was a little girl
+# achieved tok/s: 0.286752
+# cpu 0 insns: 189245822
+# total insns: 189245822
+
+
+## qemu-aarch64 -cpu max,sve512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so,match=fmla\ d,match=fmla\ v,match=fmls\ z,match=fmls\ d,match=fmls\ v,match=fmul\ z,match=fmul\ d,match=fmul\ v,match=fneg,match=revd,match=mov\ z,match=mova\ z,match=ldr\ d,match=str\ d,match=ld1rd\ {z,match=ld1d\ {z,match=ld2d\ {z,match=st1d\ {z,match=st2d\ {z,match=fmopa\ z,match=fmadd,match=fmsub \-d plugin ./run.native $(ARGS)  2>&1 | grep  "Match:\|insns"
+
+## make qemu-2 ARGS="stories15M.bin -n 5"
+## qemu-aarch64 -cpu max,sve512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so,match=fmla\ z,match=fmla\ d,match=fmla\ v,match=fmls\ z,match=fmls\ d,match=fmls\ v,match=fmul\ z,match=fmul\ d,match=fmul\ v,match=fneg,match=revd,match=mov\ z,match=mova\ z,match=ldr\ d,match=str\ d,match=ld1rd\ {z,match=ld1d\ {z,match=ld2d\ {z,match=st1d\ {z,match=st2d\ {z,match=fmopa\ z,match=fmadd,match=fmsub \-d plugin ./run.native $(ARGS)  2>&1 | grep  "Match:\|insns"
 
 ## ======================================================================================
 
