@@ -222,7 +222,7 @@ __arm_new("za") __arm_streaming
 void matmul(float * restrict xout,  float * restrict x, float * restrict w, int n, int d)
  {
     
-    int SVL= SVL = svcntsw();
+    int SVL= svcntsw();
 
     for (int row = 0; row < d; row += SVL) {
         svbool_t pD = svwhilelt_b32(row, d);
@@ -231,19 +231,17 @@ void matmul(float * restrict xout,  float * restrict x, float * restrict w, int 
         for (int k = 0; k < n; k++) {
             // Load weight vector slice (row major: w[row*n + k])
 
-            // float* dst = (float*)malloc(sizeof(float)*SVL);
-            // for (int i=0; i<SVL && i<d ;i++){
-            //     dst[i]=w[(row+i)*n+k];
-            // }
-
-            float dst[SVL];
-            for (int i=0; i<SVL && i<d ;i++) dst[i]=w[(row+i)*n+k];
+            float* dst = (float*)malloc(sizeof(float)*SVL);
+            for (int i=0; i<SVL && i<d ;i++)dst[i]=w[(row+i)*n+k];
+            // float dst[SVL];
+            // for (int i=0; i<SVL && i<d ;i++) dst[i]=w[(row+i)*n+k];
             
             svfloat32_t zW = svld1(pD, &dst[0]);
             // Load scalar x[k] and broadcast to vector
             svfloat32_t zX = svdup_f32(x[k]);
             // Outer product accumulate
             svmopa_za32_m(0, pD, svptrue_b32(), zW, zX);
+            free(dst);
         }
 
         // Store result from ZA
