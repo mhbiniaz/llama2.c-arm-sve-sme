@@ -231,10 +231,13 @@ void matmul(float * restrict xout,  float * restrict x, float * restrict w, int 
         for (int k = 0; k < n; k++) {
             // Load weight vector slice (row major: w[row*n + k])
 
-            float* dst = (float*)malloc(sizeof(float)*SVL);
-            for (int i=0; i<SVL && i<d ;i++){
-                dst[i]=w[(row+i)*n+k];
-            }
+            // float* dst = (float*)malloc(sizeof(float)*SVL);
+            // for (int i=0; i<SVL && i<d ;i++){
+            //     dst[i]=w[(row+i)*n+k];
+            // }
+
+            float dst[SVL];
+            for (int i=0; i<SVL && i<d ;i++) dst[i]=w[(row+i)*n+k];
             
             svfloat32_t zW = svld1(pD, &dst[0]);
             // Load scalar x[k] and broadcast to vector
