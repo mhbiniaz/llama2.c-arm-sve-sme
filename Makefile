@@ -60,7 +60,6 @@ runarm:
 	aarch64-linux-gnu-gcc -g -O0 -static -o run.arm run.c -lm
 	aarch64-linux-gnu-gcc -g -O0 -static -o runq.arm runq.c -lm
 
-
 .PHONY: qemu-arm-count
 qemu-arm-count: runarm
 	qemu-aarch64 -d in_asm ./run.arm $(ARGS)
@@ -77,30 +76,58 @@ sve-qemu-arm-count: runarm-sve
 ## ===================== Native ARM build and run on Kunpeng 920 =======================
 ## -mcpu=generic
 
-.PHONY: native-arm
-native-arm:
-	gcc-14 -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -ftree-vectorize -o run.native run-sve.c -lm
-	objdump -d run.native | grep "matmul"
+.PHONY: native-arm-sve
+native-arm-sve:
+	gcc-14 -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -ftree-vectorize -o run.native.sve run-sve.c -lm
+# objdump -d run.native.sve | grep "matmul"
 
 .PHONY: run-native
-run-native: native-arm
-	./run.native $(ARGS)
+run-native: native-arm-sve
+	./run.native.sve $(ARGS)
 
-.PHONY: native-arm-qemu
-native-arm-qemu: native-arm
-	qemu-aarch64 -cpu max,sve=on -d in_asm ./run.native $(ARGS)
-# make qemu-1 ARGS="stories15M.bin -n 5"
+.PHONY: native-arm-sve-qemu
+native-arm-sve-qemu: native-arm-sve
+	qemu-aarch64 -cpu max,sve=on -d in_asm ./run.native.sve $(ARGS)
+# make qemu-sve ARGS="stories15M.bin -n 5"
 
-.PHONY: qemu-1
-qemu-1: native-arm
-	qemu-aarch64 -cpu max,sve=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so ./run.native $(ARGS)
+.PHONY: qemu-sve
+qemu-sve: native-arm-sve
+	qemu-aarch64 -cpu max,sve=on ./run.native.sve $(ARGS)
 
-.PHONY: qemu-2
-qemu-2: native-arm
-	qemu-aarch64 -cpu max,sve512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so -d plugin ./run.native $(ARGS) 
+.PHONY: qemu-sve-cnt
+qemu-sve-cnt: native-arm-sve
+	qemu-aarch64 -cpu max,sve512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so -d plugin ./run.native.sve $(ARGS) 
 # 2>&1 | grep "total insns:"
 
+.PHONY: qemu-scalar-cnt
+qemu-scalar-cnt: run
+	qemu-aarch64 -cpu max -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so -d plugin ./run $(ARGS) 
 
+## ===================== SME= ====================================================================
+## ===================== Native ARM build and run on Kunpeng 920 using SME =======================
+
+.PHONY: native-arm-sme
+native-arm-sme:
+	gcc-14 -O3 -march=armv8-a+sve+sme -static -ftree-vectorize -o run.native.sme run-sme.c -lm
+# gcc-14 -O3 -march=armv8-a+sve+sme -msve-vector-bits=512 -static -ftree-vectorize -o run.native.sme run-sme.c -lm
+# objdump -d run.native.sme | grep "matmul"
+# -march=armv8-a+sve+sme-f64f64
+
+# cc -march=armv9.4-a+sme2 -fno-exceptions -fno-rtti -mno-unaligned-access -O2 -Wall -std=c99 -DIMPL=intr -c -o main_intr.o main.c
+
+.PHONY: run-native-sme
+run-native-sme: native-arm-sme
+	./run.native.sme $(ARGS)
+
+.PHONY: qemu-sme
+qemu-sme: native-arm-sme
+	qemu-aarch64 -cpu max,sve512=on,sme512=on ./run.native.sme $(ARGS)
+# make qemu-sme ARGS="stories15M.bin -n 5"
+
+.PHONY: qemu-sme-cnt
+qemu-sme-cnt: native-arm-sme
+	qemu-aarch64 -cpu max,sve512=on,sme512=on -plugin /opt/qemu/build/tests/tcg/plugins/libinsn.so -d plugin ./run.native.sme $(ARGS) 
+# make qemu-scalar-cnt ARGS="stories15M.bin -n 5"
 
 # Apptainer> make qemu-2 ARGS="stories15M.bin -n 5"
 # gcc-14 -O3 -march=armv8-a+sve -msve-vector-bits=512 -static -ftree-vectorize -o run.native run-sve.c -lm
@@ -146,5 +173,5 @@ testcc:
 
 .PHONY: clean
 clean:
-	rm -f run runq run.arm runq.arm sve.run.arm sve.runq.arm run.native runq.native
+	rm -f run runq run.arm runq.arm sve.run.arm sve.runq.arm run.native runq.native run.native.sve run.native.sme
 	rm -f qemu.log
