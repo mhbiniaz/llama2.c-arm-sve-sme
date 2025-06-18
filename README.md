@@ -109,7 +109,7 @@ cat matmul.dissassemble
 Then we can see the instruction counts using QEMU plugins as so: 
 
 ```bash
-make qemu-scalar-count ARGS="stories15M.bin -n 5"
+make qemu-scalar-cnt ARGS="stories15M.bin -n 5"
 ```
 which runs: 
 ```bash
