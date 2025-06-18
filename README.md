@@ -218,5 +218,5 @@ achieved tok/s: 0.078186
 After doing so, run the following commands to learn about the instruction counts
 ```bash
 make qemu-sve-cnt ARGS="stories15M.bin -n 5"
-make qemu-sme-count ARGS="stories15M.bin -n 5"
+make qemu-sme-cnt ARGS="stories15M.bin -n 5"
 ```
