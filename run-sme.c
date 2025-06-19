@@ -225,31 +225,25 @@ void matmul(float * restrict xout,  float * restrict x, float * restrict w, int 
     int SVL= svcntsw();
 
     for (int row = 0; row < d; row += SVL) {
+        // the correct predicates, that control boundaries even if row + SVL falls out of the bounds (the loop only check row < d) 
         svbool_t pD = svwhilelt_b32(row, d);
-        svzero_za();
+        svzero_za(); //is this the correct place to zero the za array? ⚠️ 
 
         for (int k = 0; k < n; k++) {
-            // Load weight vector slice (row major: w[row*n + k])
-
-            float* dst = (float*)malloc(sizeof(float)*SVL);
-            for (int i=0; i<SVL && i<d ;i++)dst[i]=w[(row+i)*n+k];
-            // float dst[SVL];
-            // for (int i=0; i<SVL && i<d ;i++) dst[i]=w[(row+i)*n+k];
-            
-            svfloat32_t zW = svld1(pD, &dst[0]);
+            //remember the matrices are row-major, that means a pointer to the element read row-wise from the matix ⚠️ the arm-sme2-tutorial somehow transposed the elements https://learn.arm.com/learning-paths/cross-platform/multiplying-matrices-with-sme2/6-sme2-matmul-intr/
+            svfloat32_t zW = svld1(pD, &w[row * n + k]);
             // Load scalar x[k] and broadcast to vector
             svfloat32_t zX = svdup_f32(x[k]);
             // Outer product accumulate
             svmopa_za32_m(0, pD, svptrue_b32(), zW, zX);
-            free(dst);
         }
 
         // Store result from ZA
         for (int i = 0; i < SVL && row + i < d; i++) {
             svbool_t p = svwhilelt_b32(0, 1); // scalar store
             svst1_hor_za32(
-                /*tile=*/0, /*slice=*/i, p,
-                &xout[row + i]);
+                /*tile=*/0, /*slice=*/0, p,
+                &xout[row + i]);// ⚠️  pay attention to which slice you are reading from ⚠️ 
         }
     }
 }
