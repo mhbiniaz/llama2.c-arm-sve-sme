@@ -232,20 +232,22 @@ void matmul(float* xout, float* x, float* w, int n, int d) {
 // }
     svbool_t pg_full = svptrue_b32();    // predicate all lanes active
     for (int i = 0; i < d; i++) {
-        float sum = 0.0f;
+        // float sum = 0.0f;
+        svfloat32_t v_sum = svdup_f32(0.0f);
         int j = 0;
 
         while (j < n) {
             svbool_t pg = svwhilelt_b32(j, n);    // predicate for lanes <= n
             svfloat32_t v_w = svld1(pg, &w[i*n + j]);
             svfloat32_t v_x = svld1(pg, &x[j]);
-            svfloat32_t v_mul = svmul_f32_x(pg, v_w, v_x);
-            float partial_sum = svaddv(pg, v_mul); // horizontal add
-            sum += partial_sum;
+            // svfloat32_t v_mul = svmul_f32_x(pg, v_w, v_x);
+            // float partial_sum = svaddv(pg, v_mul); // horizontal add
+            v_sum = svmla_f32_x(pg, v_sum, v_w, v_x); // FMA: v_sum += v_w * v_x            
+            // sum += partial_sum;
+            // float partial_sum = svaddv(pg, v_sum);
             j += svcntw();
         }
-
-        xout[i] = sum;
+        xout[i] = svaddv(svptrue_b16(), v_sum);
     }
 }
 
