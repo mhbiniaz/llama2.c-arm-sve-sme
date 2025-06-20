@@ -184,7 +184,7 @@ void matmul(float * restrict xout,  float * restrict x, float * restrict w, int 
         svzero_za(); //is this the correct place to zero the za array? ⚠️ 
 
         for (int k = 0; k < n; k++) {
-            //remember the matrices are row-major, that means a pointer to the element read row-wise from the matix ⚠️ the arm-sme2-tutorial somehow transposed the elements https://learn.arm.com/learning-paths/cross-platform/multiplying-matrices-with-sme2/6-sme2-matmul-intr/
+            //⚠️⚠️⚠️remember the matrices are row-major, that means a pointer to the element read row-wise from the matix ⚠️ the arm-sme2-tutorial somehow transposed the elements https://learn.arm.com/learning-paths/cross-platform/multiplying-matrices-with-sme2/6-sme2-matmul-intr/
             svfloat32_t zW = svld1(pD, &w[row * n + k]);
             // Load scalar x[k] and broadcast to vector
             svfloat32_t zX = svdup_f32(x[k]);
