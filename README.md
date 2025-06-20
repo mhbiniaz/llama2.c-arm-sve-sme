@@ -66,6 +66,12 @@ There are two sets of containers for this workshop, since we are on the Kunpeng9
 apptainer pull docker://hbiniaz/native_arm
 ```
 
+If it says you have not enough space, use the scratch (we have enough space on /mnt/dev-scratch): 
+
+```bash
+export TMPDIR=/mnt/dev-lscratch/$USER/tmp
+```
+
 And run the apptainer container:
 
 ```bash
